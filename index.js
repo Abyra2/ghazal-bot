@@ -70,12 +70,23 @@ client.once("ready", () => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  // البوت يرد فقط إذا تم منشنه أو إذا رد عليه شخص
+  // التحقق من منشن البوت
   const botWasMentioned = message.mentions.has(client.user);
-  const isReplyToBot = message.reference 
-                        ? message.reference.messageId 
-                        : null;
 
+  // التحقق إذا كان الرد على رسالة البوت نفسها
+  let isReplyToBot = false;
+  if (message.reference && message.reference.messageId) {
+    try {
+      const repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
+      if (repliedMessage.author.id === client.user.id) {
+        isReplyToBot = true;
+      }
+    } catch (err) {
+      console.error("خطأ في جلب الرسالة المرجعية:", err);
+    }
+  }
+
+  // إذا لم يتم منشن البوت ولم يكن الرد على البوت → تجاهل
   if (!botWasMentioned && !isReplyToBot) return;
 
   let userPrompt = message.content;
@@ -98,4 +109,5 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+// تسجيل الدخول بالتوكن المخزن في .env
 client.login(process.env.TOKEN);
